@@ -1,24 +1,63 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+const canvas = document.getElementById("experience-canvas");
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize( window.innerWidth, window.innerHeight );
+const sizes = {
+    width: window.innerWidth,
+    height: window.innerHeight
+}
 
-console.log(renderer);
-document.body.appendChild( renderer.domElement );
+const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+renderer.setSize( sizes.width, sizes.height );
+renderer.setPixelRatio( Math.min(window.devicePixelRatio, 2) );
 
-const geometry = new THREE.BoxGeometry();
-const material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-const cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
+const loader = new GLTFLoader();
+loader.load( './portfolio.glb', function ( glb ) {
+    scene.add( glb.scene );
+}, undefined, function ( error ) {
+    console.error( error );
+} );
+
+const light = new THREE.DirectionalLight( 0xffffff, 3 );
+light.position.set( 5, 5, 5 );
+scene.add( light );
+
+const aspect = sizes.width / sizes.height;
+const camera = new THREE.OrthographicCamera( 
+    aspect * 100 / - 2,
+    aspect * 100 / 2,
+    100 / 2,
+    100 / - 2,
+    1,
+    1000 );
+
+scene.add( camera );
+
+camera.position.x = 66;
+camera.position.y = 79;
+camera.position.z = 105;
+
+const controls = new OrbitControls( camera, canvas );
+controls.update();
+
+function onWindowResize() {
+    sizes.width = window.innerWidth;
+    sizes.height = window.innerHeight;
+
+    camera.aspect = sizes.width / sizes.height;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( sizes.width, sizes.height );
+    renderer.setPixelRatio( Math.min(window.devicePixelRatio, 2) );
+}
+window.addEventListener('resize', onWindowResize);
 
 camera.position.z = 5;
 
-function animate() {
-    requestAnimationFrame( animate );
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
+function animate() {    
+    //console.log(camera.position);
     renderer.render( scene, camera );
 }
-animate();
+renderer.setAnimationLoop( animate );
