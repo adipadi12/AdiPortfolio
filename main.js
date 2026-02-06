@@ -20,6 +20,12 @@ loader.load( './portfolio.glb',
     function ( glb ) {
         glb.scene.traverse(child => {
             console.log(child);
+            glb.scene.children.forEach(child => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
         });
         scene.add( glb.scene );
 }, 
