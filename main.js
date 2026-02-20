@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import {Octree} from "three/addons/math/Octree.js";
+import {Capsule} from "three/addons/math/Capsule.js";
+
 const scene = new THREE.Scene();
 const canvas = document.getElementById("experience-canvas");
 const raycaster = new THREE.Raycaster();
@@ -11,13 +14,25 @@ const sizes = {
     height: window.innerHeight
 }
 
+// Physics stuff
+const GRAVITY = 30;
+const CAPSULE_RADIUS = 0.35;
+const CAPSULE_HEIGHT = 1;
+const JUMP_HEIGHT = 15;
+const MOVE_SPEED = 1;
+
 let character = {
     instance: null,
-    moveDistane: 5,
-    jumpHeight: 2,
     isMoving: false,
-    moveDuration: 0.05,
 };
+
+const colliderOctree = new Octree();
+const playerController = new Capsule(new THREE.Vector3(0, CAPSULE_RADIUS, 0),
+                                     new THREE.Vector3(0, CAPSULE_HEIGHT, 0),
+                                     CAPSULE_RADIUS
+);
+
+let playerOnFloor = false;
 
 let targetRotationY = Math.PI / 2; // Default rotation (facing left)a
 
@@ -87,7 +102,7 @@ const intersectObjectsNames = [
 
 
 const loader = new GLTFLoader();
-loader.load( './portfolio.glb', 
+loader.load( './portfolio_collider.glb', 
     function ( glb ) {
         glb.scene.traverse(child => {
             if (intersectObjectsNames.includes(child.name)) {
